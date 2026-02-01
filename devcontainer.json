@@ -1,0 +1,21 @@
+{
+  "name": "Odoo 19 Devcontainer",
+  "dockerComposeFile": [
+    "docker-compose.yml"
+  ],
+  "service": "odoo",
+  "workspaceFolder": "/opt/odoo",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/opt/odoo,type=bind,consistency=cached",
+  "shutdownAction": "stopCompose",
+  "forwardPorts": [8069, 8072],
+  "postCreateCommand": "bash -lc 'python3 -m venv /opt/odoo/venv && /opt/odoo/venv/bin/pip install --upgrade pip wheel setuptools && if [ -f /opt/odoo/requirements.txt ]; then /opt/odoo/venv/bin/pip install -r /opt/odoo/requirements.txt; fi'",
+  "remoteUser": "odoo",
+  "extensions": [
+    "ms-python.python",
+    "ms-azuretools.vscode-docker",
+    "eamodio.gitlens"
+  ],
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  }
+}
