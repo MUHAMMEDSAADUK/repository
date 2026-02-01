@@ -1,40 +1,39 @@
-version: "3.8"
+version: '3.8'
 
 services:
   db:
-    image: postgres:15
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB:-postgres}
-      - POSTGRES_USER=${POSTGRES_USER:-odoo}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-odoo}
-    volumes:
-      - ./pgdata:/var/lib/postgresql/data
+    image: postgres:13
     restart: unless-stopped
+    environment:
+      POSTGRES_DB: odoo
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   odoo:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: odoo19-local
+    build: .
+    image: odoo-dev:16
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8069:8069"
-      - "8072:8072"
+    volumes:
+      - ./addons:/mnt/extra-addons
+      - odoo_filestore:/var/lib/odoo
+      - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
     environment:
       - HOST=db
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=${POSTGRES_USER:-odoo}
-      - DB_PASSWORD=${POSTGRES_PASSWORD:-odoo}
-      - ODOO_RC=/etc/odoo/odoo.conf
-      - ODOO_ADMIN_PASS=${ODOO_ADMIN_PASS:-change_me_now}
-    volumes:
-      - ./data:/var/lib/odoo         # persistent filestore
-      - ./addons:/srv/extra-addons   # custom addons on host
-      - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
-      - ./:/opt/odoo:cached          # source mount for development
-    restart: unless-stopped
+      - USER=odoo
+      - PASSWORD=odoo
+    command: ["odoo", "-c", "/etc/odoo/odoo.conf"]
 
 volumes:
-  pgdata:
+  db_data:
+  odoo_filestore:
